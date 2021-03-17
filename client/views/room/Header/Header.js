@@ -12,7 +12,7 @@ import { useLayout } from '../../../contexts/LayoutContext';
 import Burger from './Burger';
 import MarkdownText from '../../../components/MarkdownText';
 import { roomTypes } from '../../../../app/utils';
-import { useUserSubscription, useUserId } from '../../../contexts/UserContext';
+import { useUserSubscription, useUserId, useUserRoom } from '../../../contexts/UserContext';
 import { useUserData } from '../../../hooks/useUserData';
 
 export default React.memo(({ room }) => {
@@ -30,22 +30,20 @@ export default React.memo(({ room }) => {
 
 const HeaderIcon = ({ room }) => {
 	const icon = useRoomIcon(room);
-
 	return <Breadcrumbs.Icon name={icon.name}>{!icon.name && icon}</Breadcrumbs.Icon>;
 };
 
 const RoomTitle = ({ room }) => {
-	const prevSubscription = useUserSubscription(room.prid);
-	const prevRoomHref = prevSubscription ? roomTypes.getRouteLink(prevSubscription.t, prevSubscription) : null;
-
+	const parentRoom = useUserRoom(room.prid);
+	const prevRoomHref = parentRoom ? roomTypes.getRouteLink(parentRoom.t, parentRoom) : null;
 	return <Breadcrumbs>
-		{room.prid && prevSubscription && <>
+		{room.prid ? <>
 			<Breadcrumbs.Item>
-				<HeaderIcon room={prevSubscription}/>
-				<Breadcrumbs.Link href={prevRoomHref}>{prevSubscription.name}</Breadcrumbs.Link>
+				<HeaderIcon room={parentRoom}/>
+				<Breadcrumbs.Link href={prevRoomHref}>{parentRoom.name}</Breadcrumbs.Link>
 			</Breadcrumbs.Item>
 			<Breadcrumbs.Separator />
-		</>}
+		</> : null}
 		<Breadcrumbs.Item>
 			<HeaderIcon room={room}/>
 			<Header.Title>{room.name}</Header.Title>
@@ -64,7 +62,7 @@ const DirectRoomHeader = ({ room }) => {
 const RoomHeader = ({ room, topic }) => {
 	const { isMobile } = useLayout();
 	const avatar = <RoomAvatar room={room}/>;
-
+	const Subscription = useUserSubscription(room._id);
 	return <Header>
 		{ isMobile && <Header.ToolBox>
 			<Burger/>
@@ -73,7 +71,7 @@ const RoomHeader = ({ room, topic }) => {
 		<Header.Content>
 			<Header.Content.Row>
 				<RoomTitle room={room}/>
-				<Favorite room={room} />
+				{Subscription ? <Favorite room={room}/> : null}
 				<Encrypted room={room} />
 				<Translate room={room} />
 			</Header.Content.Row>
